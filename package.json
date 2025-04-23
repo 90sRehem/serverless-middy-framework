@@ -1,0 +1,31 @@
+{
+  "name": "middy-framework",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "serverless offline start --httpPort 7000 --reloadHandler"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/aws-lambda": "^8.10.149",
+    "@types/node": "^22.14.1",
+    "globals": "^16.0.0",
+    "serverless-offline": "^14.4.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.30.1"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.787.0",
+    "@middy/core": "^6.1.6",
+    "@middy/http-json-body-parser": "^6.1.6",
+    "@middy/http-multipart-body-parser": "^6.1.6",
+    "@middy/http-response-serializer": "^6.1.6",
+    "@middy/http-router": "^6.1.6"
+  },
+  "packageManager": "pnpm@8.14.1+sha512.856c4ecd97c5d3f30354ebc373cd32fb37274295c489db2d0f613a1e60f010cadfbb15036d525f3a06dec1897e4219b3c4f6d3be8f2f62fb0a366bee6aaa7533"
+}

@@ -1,0 +1,88 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: 90srehem
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: middy-framework
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  architecture: arm64
+  region: sa-east-1
+  stage: ${opt:stage, self:custom.defaults.stage}
+  timeout: 10
+  memorySize: 128
+  environment:
+    STAGE_NAME: ${env:STAGE_NAME, 'development'}
+    PROFILE_PICTURE_BUCKET: !Ref ProfilePicturesBucket
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "s3:PutObject"
+          Resource:
+            - !GetAtt ProfilePicturesBucket.Arn
+            - !Join ["", [!GetAtt ProfilePicturesBucket.Arn, "/*"]]
+
+custom:
+  defaults:
+    stage: dev
+    region: sa-east-1
+
+package:
+  individually: true
+
+build:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: false
+    exclude:
+      - "@aws-sdk/*"
+    external:
+      - "@aws-sdk/*"
+
+functions:
+  hello:
+    handler: src/functions/hello.handler
+    events:
+      - httpApi:
+          path: /
+          method: POST
+  upload:
+    handler: src/main/functions/upload.handler
+    events:
+      - httpApi:
+          path: /upload
+          method: POST
+  users:
+    handler: src/main/functions/users.handler
+    events:
+      - httpApi:
+          path: /users
+          method: ANY
+      - httpApi:
+          path: /users/{param+}
+          method: ANY
+
+resources:
+  Resources:
+    ProfilePicturesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-${self:provider.stage}-profile-pictures
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+              MaxAge: 3000

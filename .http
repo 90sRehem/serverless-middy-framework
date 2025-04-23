@@ -1,0 +1,50 @@
+####@base_url = http://localhost:7000
+@base_url = https://p8as26ply5.execute-api.sa-east-1.amazonaws.com/
+
+# @name uploads
+POST {{base_url}}/upload
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary{{$timestamp}}
+
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="file"; filename="profile.jpeg"
+Content-Type: image/jpeg
+
+< ~/Imagens/profile.jpeg
+
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="firstName"
+
+John
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="lastName"
+
+Doe
+------WebKitFormBoundary{{$timestamp}}--
+###
+
+# @name list-users
+GET {{base_url}}/users
+Content-Type: application/json
+
+###
+
+# @name update-user
+PUT {{base_url}}/users/1
+content-Type: application/json
+
+{
+    "name": "John",
+    "lastName": "Doe"
+}
+###
+
+# @name list-posts
+GET {{base_url}}/users/1/posts/
+content-Type: application/json
+###
+
+# @name find-user-post
+GET {{base_url}}/users/1/posts/1
+content-Type: application/json
+
+###
