@@ -18,7 +18,7 @@ export class UploadController implements Controller<UploadRequest> {
       throw new HttpError(400, { error: "File not found" });
     }
 
-    const fileName = `${randomUUID()}.${file.filename.split(".").pop()}`;
+    const fileName = `${randomUUID()}.${file.filename}`;
 
     const putObjectCommand = new PutObjectCommand({
       Bucket: process.env.PROFILE_PICTURE_BUCKET,

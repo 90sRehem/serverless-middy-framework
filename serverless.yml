@@ -5,6 +5,15 @@ service: middy-framework
 
 plugins:
   - serverless-offline
+  - serverless-dotenv-plugin
+
+custom:
+  defaults:
+    stage: dev
+    region: sa-east-1
+    bucketName:
+      dev: ${env:PROFILE_PICTURE_BUCKET}
+      default: !Ref ProfilePicturesBucket
 
 provider:
   name: aws
@@ -14,23 +23,43 @@ provider:
   stage: ${opt:stage, self:custom.defaults.stage}
   timeout: 10
   memorySize: 128
+  httpApi:
+    cors:
+      allowedOrigins:
+        - "*"
+      allowedHeaders:
+        - "*"
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - OPTIONS
+      allowCredentials: false
   environment:
     STAGE_NAME: ${env:STAGE_NAME, 'development'}
-    PROFILE_PICTURE_BUCKET: !Ref ProfilePicturesBucket
+    PROFILE_PICTURE_BUCKET: ${self:service}-${self:provider.stage}-profile-pictures
+    PROFILE_PICTURE_TABLE: !Ref ProfilePicturesTable
   iam:
     role:
       statements:
         - Effect: "Allow"
           Action:
             - "s3:PutObject"
+            - "s3:ListBucket"
+            - "S3:GetObject"
+            - "s3:PutObjectTagging"
+
           Resource:
             - !GetAtt ProfilePicturesBucket.Arn
             - !Join ["", [!GetAtt ProfilePicturesBucket.Arn, "/*"]]
-
-custom:
-  defaults:
-    stage: dev
-    region: sa-east-1
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:Scan
+            - dynamodb:UpdateItem
+          Resource:
+            - !GetAtt ProfilePicturesTable.Arn # short syntax
+            - !Join ["/", [!GetAtt ProfilePicturesTable.Arn, "index", "*"]]
 
 package:
   individually: true
@@ -46,18 +75,32 @@ build:
       - "@aws-sdk/*"
 
 functions:
-  hello:
-    handler: src/functions/hello.handler
+  # preflight:
+  #   handler: src/main/functions/upload.handler
+  #   events:
+  #     - httpApi:
+  #         path: /upload
+  #         method: OPTIONS
+  #     - httpApi:
+  #         path: /upload/{param+}
+  #         method: OPTIONS
+  file-upload-trigger:
+    handler: src/main/functions/file-upload-trigger.handler
     events:
-      - httpApi:
-          path: /
-          method: POST
+      - s3:
+          bucket: ${self:service}-${self:provider.stage}-profile-pictures
+          event: s3:ObjectCreated:*
+          existing: true
+
   upload:
     handler: src/main/functions/upload.handler
     events:
       - httpApi:
           path: /upload
-          method: POST
+          method: ANY
+      - httpApi:
+          path: /upload/{param+}
+          method: ANY
   users:
     handler: src/main/functions/users.handler
     events:
@@ -86,3 +129,18 @@ resources:
                 - POST
                 - DELETE
               MaxAge: 3000
+    ProfilePicturesTable: # logical name - nome do template dentro do cloudformation
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-ProfilePicturesTable
+        BillingMode: PAY_PER_REQUEST
+        # DeletionProtectionEnabled: true # <- marcar para amanter os dados da tabela
+        AttributeDefinitions:
+          - AttributeName: fileKey
+            AttributeType: S
+        KeySchema:
+          - AttributeName: fileKey
+            KeyType: HASH
+        TimeToLiveSpecification:
+          AttributeName: expiresAt
+          Enabled: true

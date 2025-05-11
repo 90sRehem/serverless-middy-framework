@@ -1,5 +1,18 @@
-####@base_url = http://localhost:7000
-@base_url = https://p8as26ply5.execute-api.sa-east-1.amazonaws.com/
+@base_url = https://emybt4mxga.execute-api.sa-east-1.amazonaws.com
+##@base_url = http://localhost:7000
+@presignedUrl = {{generate.response.body.$.url}}
+@getPresignedUrl = {{generateGetFile.response.body.$.url2}}
+@presignedPostUrl = {{generatePresignedPost.response.body.$.url}}
+@presignedPostBucket = {{generatePresignedPost.response.body.$.fields.bucket}}
+@presignedPostXAmzAlgorithm = {{generatePresignedPost.response.body.$.fields.X-Amz-Algorithm}}
+@presignedPostXAmzCredential = {{generatePresignedPost.response.body.$.fields.X-Amz-Credential}}
+@presignedPostXAmzDate = {{generatePresignedPost.response.body.$.fields.X-Amz-Date}}
+@presignedPostXAmzExpires = {{generatePresignedPost.response.body.$.fields.X-Amz-Expires}}
+@presignedPostXAmzSignature = {{generatePresignedPost.response.body.$.fields.X-Amz-Signature}}
+@presignedPostXAmzSecurityToken = {{generatePresignedPost.response.body.$.fields.X-Amz-Security-Token}}
+@presignedPostKey = {{generatePresignedPost.response.body.$.fields.key}}
+@presignedPostPolicy = {{generatePresignedPost.response.body.$.fields.Policy}}
+
 
 # @name uploads
 POST {{base_url}}/upload
@@ -22,9 +35,101 @@ Doe
 ------WebKitFormBoundary{{$timestamp}}--
 ###
 
+
+# @name generatePresignedPost
+POST {{base_url}}/upload/presigned-post
+Content-Type: application/json
+
+{
+    "fileName": "profile.jpeg",
+    "fileType": "image/jpeg",
+    "fileSize": 100
+}
+###
+
+# @name uploadPresignedPost
+POST {{presignedPostUrl}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary{{$timestamp}}
+
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="bucket"
+
+{{presignedPostBucket}}
+
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="X-Amz-Algorithm"
+
+{{presignedPostXAmzAlgorithm}}
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="X-Amz-Credential"
+
+{{presignedPostXAmzCredential}}
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="X-Amz-Date"
+
+{{presignedPostXAmzDate}}
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="X-Amz-Security-Token"
+
+{{presignedPostXAmzSecurityToken}}
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="key"
+
+{{presignedPostKey}}
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="Policy"
+
+{{presignedPostPolicy}}
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="X-Amz-Signature"
+
+{{presignedPostXAmzSignature}}
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="Content-Type"
+
+image/jpeg
+------WebKitFormBoundary{{$timestamp}}
+Content-Disposition: form-data; name="file"; filename="profile.jpeg"
+Content-Type: image/jpeg
+
+< ~/Imagens/code.png
+
+------WebKitFormBoundary{{$timestamp}}--
+###
+
+# @name generate
+POST {{base_url}}/upload/presigned-url
+Content-Type: application/json
+
+{
+    "filename": "profile.jpeg"
+}
+###
+
+# @name generateGetFile
+POST {{base_url}}/upload/get-file-presigned-url
+Content-Type: application/json
+
+{
+    "filename": "5a38178c-243a-4a53-9028-4bcc7c5687e8.profile.jpeg"
+}
+###
+
+# @name upload-with-presigned-url
+PUT {{presignedUrl}}
+Content-Type: image/jpeg
+
+< ~/Imagens/profile.jpeg
+
+###
+
+# @name get-file-with-presigned-url
+GET {{getPresignedUrl}}
+###
+
+
 # @name list-users
 GET {{base_url}}/users
-Content-Type: application/json
 
 ###
 

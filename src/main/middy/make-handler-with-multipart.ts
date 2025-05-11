@@ -1,14 +1,16 @@
 import middy from "@middy/core";
 import httpJsonBodyParser from "@middy/http-json-body-parser";
+import httpMultipartBodyParser from "@middy/http-multipart-body-parser";
 import httpResponseSerializer from "@middy/http-response-serializer";
 
 import { Controller } from "../../application/types/controller";
 import { sanitizeObject } from "../utils/sanitize-object";
 import { errorHandler } from "./middlewares/error-handler";
 
-export function makeHandler(controller: Controller<any>) {
+export function makeHandlerWithMultipart(controller: Controller<any>) {
   return middy()
     .use(httpJsonBodyParser({ disableContentTypeError: true }))
+    .use(httpMultipartBodyParser({ disableContentTypeError: true }))
     .use(errorHandler())
     .use(
       httpResponseSerializer({
@@ -18,7 +20,7 @@ export function makeHandler(controller: Controller<any>) {
             regex: /^application\/json$/,
             serializer: ({ body }) => {
               if (typeof body === "object" && body.url) {
-                body.url = decodeURIComponent(body.url); // Decodifica antes de serializar
+                body.url = decodeURIComponent(body.url);
               }
               return JSON.stringify(body);
             },
